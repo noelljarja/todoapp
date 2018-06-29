@@ -1,6 +1,6 @@
 const expect = require('expect');
 const request = require('supertest');
-const {ObjectID} = require('mongodb')
+const {ObjectID} = require('mongodb');
 
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
@@ -107,4 +107,40 @@ describe ('GET /todos', function(){
             })
             .end(done);
     })
-})
+
+describe('Delete /todos',function(done){
+    it('Should remove todo', function(done){
+        var hexId = todos[1]._id.toHexString();
+        request(app)
+            .delete('/todos/' + hexId)
+            .expect(200)
+            .expect(function(res){
+                expect(res.body.todos._id).toBe(hexId);
+            })
+            .end(function(err,res){
+            if(err){
+                return done(err);
+            }
+            Todo.findById(hexId).then(function(todo){
+              expect(todo).toBe(null);
+               done();
+            }).catch((e)=>done(e))
+
+            })
+        })
+    it('should return 404 if todo not found',function(done){
+        var newId = new ObjectID();
+        request(app)
+            .delete('/todos/'+ newId.toHexString())
+            .expect(404)
+            .end(done)
+    });
+    it('should return 404 if object id is invalid', function(done){
+        var newId = 444;
+        request(app)
+            .delete('/todos/'+ newId)
+            .expect(404)
+            .end(done);
+    })
+    })
+    });
